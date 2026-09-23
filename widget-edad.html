@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fecha de nacimiento y edad</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:8px;font:16px Arial,sans-serif;color:#2c3345;background:transparent}.fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(90px,1fr);gap:20px}label{display:block;font-size:14px;font-weight:600;margin-bottom:10px}input{width:100%;min-height:44px;border:1px solid #b8bdc9;border-radius:4px;padding:10px;font:inherit;color:inherit;background:#fff}input:focus{outline:2px solid #486bdb;outline-offset:2px}input[readonly]{background:#f3f4f7}small{display:block;margin-top:7px;color:#596274;font-size:12px}.error{color:#b42318;min-height:20px;margin:12px 0 0;font-size:14px}[aria-invalid=true]{border-color:#b42318}@media(max-width:340px){.fields{grid-template-columns:1fr;gap:16px}}
+</style>
+</head>
+<body>
+<div class="fields">
+<div><label for="birth">FECHA DE NACIMIENTO *</label><input id="birth" type="date" required min="0001-01-01" aria-describedby="date-help error"><small id="date-help">Debe ser anterior a hoy.</small></div>
+<div><label for="age">EDAD</label><input id="age" type="text" readonly aria-live="polite" aria-describedby="age-help"><small id="age-help">Años cumplidos</small></div>
+</div>
+<p id="error" class="error" role="alert"></p>
+<script id="age-core">
+function parseDate(value){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return null;
+  const [y,m,d]=value.split('-').map(Number);
+  const leap=y%4===0&&(y%100!==0||y%400===0);
+  const lengths=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+  return y>=1&&m>=1&&m<=12&&d>=1&&d<=lengths[m-1]?{y,m,d}:null;
+}
+function todayInLima(now=new Date()){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+  const get=t=>parts.find(p=>p.type===t).value;
+  return `${get('year').padStart(4,'0')}-${get('month')}-${get('day')}`;
+}
+function calculateAge(birth,today){
+  const b=parseDate(birth),t=parseDate(today);
+  if(!b||!t||birth>=today)return null;
+  // En años no bisiestos, quien nació el 29 de febrero cumple años el 1 de marzo.
+  return t.y-b.y-Number(t.m<b.m||(t.m===b.m&&t.d<b.d));
+}
+function yesterday(today){
+  const p=parseDate(today),date=new Date(0);
+  date.setUTCFullYear(p.y,p.m-1,p.d);date.setUTCHours(0,0,0,0);date.setUTCDate(date.getUTCDate()-1);
+  return date.toISOString().slice(0,10);
+}
+</script>
+<script>
+const birth=document.getElementById('birth'),age=document.getElementById('age'),error=document.getElementById('error');
+let connected=false,api=null;
+function update(showError=false){
+  const today=todayInLima();birth.max=yesterday(today);
+  const years=calculateAge(birth.value,today);
+  const valid=years!==null;
+  age.value=valid?String(years):'';
+  const message=valid?'':birth.value?'Ingrese una fecha válida anterior a hoy.':'Ingrese su fecha de nacimiento.';
+  birth.setCustomValidity(message);
+  birth.setAttribute('aria-invalid',String(!valid&&(showError||!!birth.value)));
+  error.textContent=showError||birth.value?message:'';
+  const value=valid?JSON.stringify({fecha_nacimiento:birth.value,edad:years,fecha_calculo:today}):'';
+  if(connected){api.sendData({value});api.requestFrameResize({height:document.body.scrollHeight+16});}
+  return {valid,value};
+}
+birth.addEventListener('input',()=>update());
+birth.addEventListener('change',()=>update(true));
+window.addEventListener('focus',()=>update());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)update();});
+window.addEventListener('resize',()=>update());
+setInterval(()=>update(),60000);
+update();
+function connect(){
+  api=window.JFCustomWidget;
+  api.subscribe('ready',data=>{
+    if(data&&data.value){try{const saved=JSON.parse(data.value);if(parseDate(saved.fecha_nacimiento))birth.value=saved.fecha_nacimiento;}catch{}}
+    connected=true;update();
+  });
+  api.subscribe('submit',()=>{const result=update(true);api.sendSubmit(result);if(!result.valid)birth.focus();});
+}
+// Se carga la integración solo dentro del iframe de Jotform; el archivo también funciona como demostración local.
+if(window.self!==window.top){
+  const script=document.createElement('script');script.src='https://js.jotform.com/JotFormCustomWidget.min.js';script.onload=connect;
+  script.onerror=()=>{error.textContent='No se pudo conectar con Jotform. Recargue el formulario antes de enviarlo.';};document.head.appendChild(script);
+}
+</script>
+</body>
+</html>
