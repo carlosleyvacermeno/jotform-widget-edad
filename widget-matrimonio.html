@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registrar matrimonio</title><style>body{margin:0;padding:8px;font:16px Arial,sans-serif;color:#2c3345}label{display:inline-flex;align-items:center;gap:28px;line-height:24px;font-weight:700;cursor:pointer}input{width:19px;height:19px;margin:0;accent-color:#2e69ff;flex-shrink:0}input:focus-visible{outline:2px solid #2e69ff;outline-offset:3px}p{font-size:13px;line-height:18px;margin:6px 0 0;color:#596273}</style></head><body><label for="matrimonio">¿Registrará Matrimonio?<input id="matrimonio" type="checkbox" aria-describedby="ayuda"></label><p id="ayuda">solo en el caso que ambos participarán</p><script>
+let api=null,connected=false;
+const checkbox=document.getElementById('matrimonio');
+function value(){return checkbox.checked?'Sí':'No';}
+function send(){if(connected)api.sendData({value:value()});}
+checkbox.addEventListener('change',send);
+function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{checkbox.checked=!!(data&&data.value==='Sí');connected=true;send();});api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
+if(window.self!==window.top){const script=document.createElement('script');script.src='https://js.jotform.com/JotFormCustomWidget.min.js?onload=connect';document.head.appendChild(script);}
+</script></body></html>
