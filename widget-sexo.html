@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SEXO</title><style>body{margin:0;padding:8px;font:16px Arial,sans-serif;color:#2c3345}fieldset{border:0;padding:0;margin:0}legend{font-size:16px;font-weight:500;margin-bottom:14px}label{display:inline-flex;align-items:center;gap:9px;margin-right:30px;cursor:pointer}input{width:18px;height:18px;accent-color:#2e69ff;margin:0}input:focus-visible{outline:2px solid #2e69ff;outline-offset:3px}</style></head><body><fieldset><legend>SEXO</legend><label><input type="radio" name="sexo" value="H">Hombre</label><label><input type="radio" name="sexo" value="M">Mujer</label></fieldset><script>
+let api=null,connected=false;
+function value(){return document.querySelector('input:checked')?.value||'';}
+function send(){if(connected)api.sendData({value:value()});}
+document.querySelectorAll('input').forEach(input=>input.addEventListener('change',send));
+function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{if(data&&['H','M'].includes(data.value))document.querySelector('input[value="'+data.value+'"]').checked=true;connected=true;send();});api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
+if(window.self!==window.top){const script=document.createElement('script');script.src='https://js.jotform.com/JotFormCustomWidget.min.js?onload=connect';document.head.appendChild(script);}
+</script></body></html>
