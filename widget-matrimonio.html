@@ -11,6 +11,6 @@ window.addEventListener('message',event=>{
  if(event.data?.type==='carlos-sex-request'&&event.data.formId==='262631114450042')broadcast();
 });
 checkbox.addEventListener('change',send);
-function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{checkbox.checked=!!(data&&data.value==='Sí');connected=true;linked=String(data?.formId)==='262631114450042'&&new URLSearchParams(location.search).get('qid')==='46';send();});api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
+function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{checkbox.checked=!!(data&&data.value==='Sí');connected=true;linked=String(data?.formId ?? data)==='262631114450042'&&new URLSearchParams(location.search).get('qid')==='46';send();});api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
 if(window.self!==window.top){const script=document.createElement('script');script.onload=connect;script.src='https://cdn.jotfor.ms/s/umd/latest/for-custom-widgets.js';document.head.appendChild(script);}
 </script></body></html>
