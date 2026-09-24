@@ -6,5 +6,5 @@ function value(){return checkbox.checked?'Sí':'No';}
 function send(){if(connected)api.sendData({value:value()});}
 checkbox.addEventListener('change',send);
 function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{checkbox.checked=!!(data&&data.value==='Sí');connected=true;send();});api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
-if(window.self!==window.top){const script=document.createElement('script');script.src='https://js.jotform.com/JotFormCustomWidget.min.js?onload=connect';document.head.appendChild(script);}
+if(window.self!==window.top){const script=document.createElement('script');script.onload=connect;script.src='https://cdn.jotfor.ms/s/umd/latest/for-custom-widgets.js';document.head.appendChild(script);}
 </script></body></html>
