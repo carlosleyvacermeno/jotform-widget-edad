@@ -52,7 +52,7 @@ function update(showError=false){
   birth.setAttribute('aria-invalid',String(!valid&&(showError||!!birth.value)));
   error.textContent=showError||birth.value?message:'';
   const value=valid?JSON.stringify({fecha_nacimiento:birth.value,edad:years,fecha_calculo:today}):'';
-  if(connected){api.sendData({value});api.requestFrameResize({height:document.body.scrollHeight+16});}
+  if(connected){api.sendData({valid,value});api.requestFrameResize({height:document.body.scrollHeight+16});}
   return {valid,value};
 }
 birth.addEventListener('input',()=>update());
