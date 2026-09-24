@@ -1,10 +1,29 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SEXO</title><style>body{margin:0;padding:8px;font:16px Arial,sans-serif;color:#2c3345}fieldset{border:0;padding:0;margin:0}legend{float:left;font-size:16px;font-weight:700;line-height:20px;padding:0;margin:0 40px 0 0}label{display:inline-flex;align-items:center;gap:9px;line-height:20px;margin-right:30px;cursor:pointer}input{width:18px;height:18px;accent-color:#2e69ff;margin:0}input:focus-visible{outline:2px solid #2e69ff;outline-offset:3px}</style></head><body><fieldset><legend>Sexo</legend><label><input type="radio" name="sexo" value="H">Hombre</label><label><input type="radio" name="sexo" value="M">Mujer</label></fieldset><script>
-let api=null,connected=false;
-function value(){return document.querySelector('input:checked')?.value||'';}
-function send(){if(connected)api.sendData({value:value()});}
-document.querySelectorAll('input').forEach(input=>input.addEventListener('change',send));
-function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{if(data&&['H','M'].includes(data.value))document.querySelector('input[value="'+data.value+'"]').checked=true;connected=true;send();});api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
-if(window.self!==window.top){const script=document.createElement('script');script.src='https://js.jotform.com/JotFormCustomWidget.min.js?onload=connect';document.head.appendChild(script);}
+let api=null,connected=false,locked=false,personal='';
+const radios=Array.from(document.querySelectorAll('input[name="sexo"]'));
+const qid=new URLSearchParams(location.search).get('qid');
+let linked=false;
+function value(){return radios.find(r=>r.checked)?.value||'';}
+function send(){if(connected)api.sendData({valid:true,value:value()});}
+function applyMarriage(marked){
+ if(!linked)return;
+ if(marked&&!locked)personal=value();
+ const selected=marked?(qid==='45'?'H':'M'):(locked?personal:value());
+ locked=marked;
+ radios.forEach(r=>{r.checked=r.value===selected;r.disabled=locked;});
+ send();
+}
+function askMarriage(){if(!linked)return;for(let i=0;i<parent.frames.length;i++){try{parent.frames[i].postMessage({type:'carlos-sex-request',formId:'262631114450042'},location.origin);}catch{}}}
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||!event.source||event.source===window)return;
+ try{if(event.source.parent!==parent||new URL(event.source.location.href).pathname!=='/jotform-widget-edad/widget-matrimonio.html'||new URL(event.source.location.href).searchParams.get('qid')!=='46')return;}catch{return;}
+ if(event.data?.type==='carlos-marriage-state'&&event.data.formId==='262631114450042')applyMarriage(event.data.marked===true);
+});
+radios.forEach(r=>r.addEventListener('change',()=>{if(!locked)personal=value();send();}));
+function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{
+ if(data&&['H','M'].includes(data.value))radios.forEach(r=>r.checked=r.value===data.value);
+ connected=true;personal=value();linked=String(data?.formId)==='262631114450042'&&['45','51'].includes(qid);send();askMarriage();
+});api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
+if(window.self!==window.top){const script=document.createElement('script');script.onload=connect;script.src='https://cdn.jotfor.ms/s/umd/latest/for-custom-widgets.js';document.head.appendChild(script);}
 </script></body></html>
-
