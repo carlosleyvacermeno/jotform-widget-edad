@@ -72,7 +72,7 @@ function connect(){
 }
 // Se carga la integración solo dentro del iframe de Jotform; el archivo también funciona como demostración local.
 if(window.self!==window.top){
-  const script=document.createElement('script');script.src='https://js.jotform.com/JotFormCustomWidget.min.js?onload=connect';
+  const script=document.createElement('script');script.onload=connect;script.src='https://cdn.jotfor.ms/s/umd/latest/for-custom-widgets.js';
   script.onerror=()=>{error.textContent='No se pudo conectar con Jotform. Recargue el formulario antes de enviarlo.';};document.head.appendChild(script);
 }
 </script>
