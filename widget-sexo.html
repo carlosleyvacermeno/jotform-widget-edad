@@ -23,7 +23,7 @@ window.addEventListener('message',event=>{
 radios.forEach(r=>r.addEventListener('change',()=>{if(!locked)personal=value();send();}));
 function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{
  if(data&&['H','M'].includes(data.value))radios.forEach(r=>r.checked=r.value===data.value);
- connected=true;personal=value();linked=String(data?.formId ?? data)==='262631114450042'&&['45','51'].includes(qid);send();askMarriage();
+ connected=true;personal=value();linked=['45','51'].includes(qid);send();askMarriage();
 });api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
 if(window.self!==window.top){const script=document.createElement('script');script.onload=connect;script.src='https://cdn.jotfor.ms/s/umd/latest/for-custom-widgets.js';document.head.appendChild(script);}
 </script></body></html>
