@@ -41,40 +41,53 @@ function yesterday(today){
 </script>
 <script>
 const birth=document.getElementById('birth'),age=document.getElementById('age'),error=document.getElementById('error');
+const qid=new URLSearchParams(location.search).get('qid');
+const sourceId=({'59':'34','60':'52'})[qid]||'';
+const isAgeColumn=!!sourceId;
 let connected=false,api=null;
+if(isAgeColumn){birth.parentElement.hidden=true;birth.required=false;error.hidden=true;document.querySelector('.fields').style.display='block';document.querySelector('label[for="age"]').textContent='EDAD PARA EXPORTACIÓN';}
+function sibling(id){for(let i=0;i<parent.frames.length;i++){try{const w=parent.frames[i],u=new URL(w.location.href);if(u.origin===location.origin&&u.searchParams.get('qid')===id)return w;}catch{}}return null;}
+function marriageSelected(){try{return !!sibling('46')?.document.getElementById('matrimonio')?.checked;}catch{return false;}}
+function post(message){if(window===parent)return;for(let i=0;i<parent.frames.length;i++){try{parent.frames[i].postMessage(message,location.origin);}catch{}}}
+function sendAge(){post({type:'carlos-birth-age',sourceId:qid,value:qid==='52'&&!marriageSelected()?'':age.value});}
+function askAge(){if(isAgeColumn)post({type:'carlos-birth-request',sourceId});}
 function update(showError=false){
+  if(isAgeColumn){const result={valid:true,value:age.value};if(connected)api.sendData(result);return result;}
   const today=todayInLima();birth.max=yesterday(today);
-  const years=calculateAge(birth.value,today);
-  const valid=years!==null;
+  const years=calculateAge(birth.value,today),valid=years!==null;
   age.value=valid?String(years):'';
   const message=valid?'':birth.value?'Ingrese una fecha válida anterior a hoy.':'Ingrese su fecha de nacimiento.';
-  birth.setCustomValidity(message);
-  birth.setAttribute('aria-invalid',String(!valid&&(showError||!!birth.value)));
+  birth.setCustomValidity(message);birth.setAttribute('aria-invalid',String(!valid&&(showError||!!birth.value)));
   error.textContent=showError||birth.value?message:'';
-  const value=valid?JSON.stringify({fecha_nacimiento:birth.value,edad:years,fecha_calculo:today}):'';
-  if(connected){api.sendData({valid,value});api.requestFrameResize({height:document.body.scrollHeight+16});}
+  const value=valid?birth.value.split('-').reverse().join('-'):'';
+  if(connected){api.sendData({valid,value});api.requestFrameResize({height:document.body.scrollHeight+16});sendAge();}
   return {valid,value};
 }
-birth.addEventListener('input',()=>update());
-birth.addEventListener('change',()=>update(true));
-window.addEventListener('focus',()=>update());
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)update();});
-window.addEventListener('resize',()=>update());
-setInterval(()=>update(),60000);
-update();
-function connect(){
-  api=window.JFCustomWidget;
-  api.subscribe('ready',data=>{
-    if(data&&data.value){try{const saved=JSON.parse(data.value);if(parseDate(saved.fecha_nacimiento))birth.value=saved.fecha_nacimiento;}catch{}}
-    connected=true;update();
-  });
-  api.subscribe('submit',()=>{const result=update(true);api.sendSubmit(result);if(!result.valid)birth.focus();});
+window.addEventListener('message',event=>{
+  if(event.origin!==location.origin||!event.source||event.source===window)return;
+  let u;try{if(event.source.parent!==parent)return;u=new URL(event.source.location.href);}catch{return;}
+  const sender=u.searchParams.get('qid'),msg=event.data;
+  if(u.pathname===location.pathname){
+    if(isAgeColumn&&sender===sourceId&&msg?.type==='carlos-birth-age'&&msg.sourceId===sourceId){age.value=/^\d+$/.test(msg.value)?msg.value:'';update();}
+    if(!isAgeColumn&&msg?.type==='carlos-birth-request'&&msg.sourceId===qid&&({'59':'34','60':'52'})[sender]===qid)sendAge();
+  }
+  if(u.pathname==='/jotform-widget-edad/widget-matrimonio.html'&&sender==='46'&&msg?.type==='carlos-marriage-state'&&qid==='52')update();
+});
+birth.addEventListener('input',()=>update());birth.addEventListener('change',()=>update(true));
+window.addEventListener('focus',()=>update());document.addEventListener('visibilitychange',()=>{if(!document.hidden)update();});
+window.addEventListener('resize',()=>update());setInterval(()=>update(),60000);update();
+function restore(raw){
+ if(!raw)return;
+ let saved=raw;try{const parsed=JSON.parse(raw);if(parsed&&typeof parsed==='object')saved=parsed.fecha_nacimiento||'';}catch{}
+ if(typeof saved!=='string')return;
+ if(/^\d{2}-\d{2}-\d{4}$/.test(saved))saved=saved.split('-').reverse().join('-');
+ if(parseDate(saved))birth.value=saved;
 }
-// Se carga la integración solo dentro del iframe de Jotform; el archivo también funciona como demostración local.
-if(window.self!==window.top){
-  const script=document.createElement('script');script.onload=connect;script.src='https://cdn.jotfor.ms/s/umd/latest/for-custom-widgets.js';
-  script.onerror=()=>{error.textContent='No se pudo conectar con Jotform. Recargue el formulario antes de enviarlo.';};document.head.appendChild(script);
+function connect(){api=window.JFCustomWidget;
+ api.subscribe('ready',data=>{if(!isAgeColumn)restore(data?.value);connected=true;update();askAge();});
+ api.subscribe('submit',()=>{const result=update(true);api.sendSubmit(result);if(!result.valid)birth.focus();});
 }
+if(window.self!==window.top){const script=document.createElement('script');script.onload=connect;script.src='https://cdn.jotfor.ms/s/umd/latest/for-custom-widgets.js';script.onerror=()=>{error.textContent='No se pudo conectar con Jotform. Recargue el formulario antes de enviarlo.';};document.head.appendChild(script);}
 </script>
 </body>
 </html>
