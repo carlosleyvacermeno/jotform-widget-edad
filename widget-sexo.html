@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SEXO</title><style>body{margin:0;padding:8px;font:16px Arial,sans-serif;color:#2c3345}fieldset{border:0;padding:0;margin:0}legend{float:left;font-size:16px;font-weight:700;line-height:20px;padding:0;margin:0 40px 0 0}label{display:inline-flex;align-items:center;gap:9px;line-height:20px;margin-right:30px;cursor:pointer}input{width:18px;height:18px;accent-color:#2e69ff;margin:0}input:focus-visible{outline:2px solid #2e69ff;outline-offset:3px}</style></head><body><fieldset><legend>Sexo</legend><label><input type="radio" name="sexo" value="H">Hombre</label><label><input type="radio" name="sexo" value="M">Mujer</label></fieldset><script>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SEXO</title><style>body{margin:0;padding:8px;font:16px Arial,sans-serif;color:#2c3345}fieldset{border:0;padding:0;margin:0}legend{float:left;font-size:16px;font-weight:700;line-height:20px;padding:0;margin:0 40px 0 0}label{display:inline-flex;align-items:center;gap:9px;line-height:20px;margin-right:30px;cursor:pointer}input{width:18px;height:18px;accent-color:#2e69ff;margin:0}input:focus-visible{outline:2px solid #2e69ff;outline-offset:3px}</style></head><body><fieldset><legend>Sexo <span aria-hidden="true" style="color:#b42318">*</span></legend><label><input type="radio" required name="sexo" value="H">Hombre</label><label><input type="radio" required name="sexo" value="M">Mujer</label></fieldset><script>
 let api=null,connected=false,locked=false,personal='';
 const radios=Array.from(document.querySelectorAll('input[name="sexo"]'));
 const qid=new URLSearchParams(location.search).get('qid');
 let linked=false;
 function value(){return radios.find(r=>r.checked)?.value||'';}
-function send(){if(connected)api.sendData({valid:true,value:value()});}
+function send(){if(connected)api.sendData({valid:!!value(),value:value()});}
 function applyMarriage(marked){
  if(!linked)return;
  if(marked&&!locked)personal=value();
@@ -24,6 +24,6 @@ radios.forEach(r=>r.addEventListener('change',()=>{if(!locked)personal=value();s
 function connect(){api=window.JFCustomWidget;api.subscribe('ready',data=>{
  if(data&&['H','M'].includes(data.value))radios.forEach(r=>r.checked=r.value===data.value);
  connected=true;personal=value();linked=['45','51'].includes(qid);send();askMarriage();
-});api.subscribe('submit',()=>api.sendSubmit({valid:true,value:value()}));}
+});api.subscribe('submit',()=>api.sendSubmit({valid:!!value(),value:value()}));}
 if(window.self!==window.top){const script=document.createElement('script');script.onload=connect;script.src='https://cdn.jotfor.ms/s/umd/latest/for-custom-widgets.js';document.head.appendChild(script);}
 </script></body></html>
