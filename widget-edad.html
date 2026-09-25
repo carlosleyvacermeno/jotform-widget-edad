@@ -45,7 +45,7 @@ const qid=new URLSearchParams(location.search).get('qid');
 const sourceId=({'59':'34','60':'52'})[qid]||'';
 const isAgeColumn=!!sourceId;
 let connected=false,api=null;
-if(isAgeColumn){birth.parentElement.hidden=true;birth.required=false;error.hidden=true;document.querySelector('.fields').style.display='block';document.querySelector('label[for="age"]').textContent='EDAD PARA EXPORTACIÓN';}
+if(isAgeColumn){document.body.setAttribute('aria-hidden','true');age.tabIndex=-1;birth.parentElement.hidden=true;birth.required=false;error.hidden=true;document.querySelector('.fields').style.display='block';document.querySelector('label[for="age"]').textContent='EDAD PARA EXPORTACIÓN';}
 function sibling(id){for(let i=0;i<parent.frames.length;i++){try{const w=parent.frames[i],u=new URL(w.location.href);if(u.origin===location.origin&&u.searchParams.get('qid')===id)return w;}catch{}}return null;}
 function marriageSelected(){try{return !!sibling('46')?.document.getElementById('matrimonio')?.checked;}catch{return false;}}
 function post(message){if(window===parent)return;for(let i=0;i<parent.frames.length;i++){try{parent.frames[i].postMessage(message,location.origin);}catch{}}}
